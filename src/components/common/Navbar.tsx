@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* 우측 인증 및 상태 버튼 */}
-        <div className="hidden sm:flex items-center gap-2.5">
+        <div className="hidden md:flex items-center gap-2.5">
           {/* Firebase 연결 상태 배지 */}
           <button
             onClick={onOpenFirebaseInfo}

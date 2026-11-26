@@ -68,21 +68,44 @@ export const App: React.FC = () => {
   };
 
   // 데이터 로드
+  const currentUserId = currentUser?.uid ?? null;
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getContentItems(activeTab, currentUser?.uid);
+      const data = await getContentItems(activeTab, currentUserId);
       setItems(data);
     } catch (error) {
       console.error('데이터 로드 실패:', error);
     } finally {
       setLoading(false);
     }
-  }, [activeTab, currentUser?.uid]);
+  }, [activeTab, currentUserId]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let isCancelled = false;
+
+    const fetchItems = async () => {
+      try {
+        const data = await getContentItems(activeTab, currentUserId);
+        if (!isCancelled) {
+          setItems(data);
+        }
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchItems();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeTab, currentUserId]);
 
   // 콘텐츠 등록/수정 처리
   const handleFormSubmit = async (
@@ -245,7 +268,15 @@ export const App: React.FC = () => {
         isOpen={isAuthModalOpen}
         initialMode={authModalMode}
         onClose={() => setIsAuthModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(user) => {
+          if (user) {
+            setCurrentUser({
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+            });
+          }
           loadData();
         }}
       />

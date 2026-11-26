@@ -31,10 +31,11 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   onDelete,
   onToggleFavorite,
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
 
   if (!isOpen || !item) return null;
 
+  const imageError = Boolean(item.coverUrl && failedUrl === item.coverUrl);
   const isMovie = item.type === 'movie';
   const isDrama = item.type === 'drama';
   const isMusic = item.type === 'music';
@@ -47,7 +48,10 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in"
+      onClick={onClose}
+    >
       <div 
         className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-stone-200/80 overflow-hidden my-8"
         onClick={(e) => e.stopPropagation()}
@@ -84,7 +88,7 @@ export const ContentDetailModal: React.FC<ContentDetailModalProps> = ({
               <img
                 src={item.coverUrl}
                 alt={item.title}
-                onError={() => setImageError(true)}
+                onError={() => setFailedUrl(item.coverUrl || null)}
                 className="w-full h-full object-cover"
               />
             ) : (

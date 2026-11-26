@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   X, 
   Upload, 
@@ -15,6 +15,8 @@ import { MOVIE_GENRES, DRAMA_GENRES, MUSIC_GENRES } from '../../types';
 import { StarRating } from '../common/StarRating';
 import { uploadImageFile } from '../../services/storageService';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 interface ContentFormModalProps {
   isOpen: boolean;
   type: ContentType;
@@ -24,63 +26,34 @@ interface ContentFormModalProps {
   onSubmit: (itemData: Omit<ContentItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
 }
 
-export const ContentFormModal: React.FC<ContentFormModalProps> = ({
-  isOpen,
+const ContentFormModalInner: React.FC<Omit<ContentFormModalProps, 'isOpen'>> = ({
   type,
   editingItem,
   userId,
   onClose,
   onSubmit,
 }) => {
-  const [title, setTitle] = useState('');
-  const [year, setYear] = useState<number | string>(new Date().getFullYear());
-  const [genre, setGenre] = useState<GenreType>('로맨스');
-  const [rating, setRating] = useState<number>(5);
-  const [comment, setComment] = useState('');
-  const [coverUrl, setCoverUrl] = useState('');
-  const [artist, setArtist] = useState('');
-  const [album, setAlbum] = useState('');
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  // 이미지 입력 방식 탭 ('file' | 'url')
-  const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('file');
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [previewError, setPreviewError] = useState(false);
-
   const availableGenres = type === 'movie' 
     ? MOVIE_GENRES 
     : type === 'drama' 
       ? DRAMA_GENRES 
       : MUSIC_GENRES;
 
-  useEffect(() => {
-    if (editingItem) {
-      setTitle(editingItem.title);
-      setYear(editingItem.year);
-      setGenre(editingItem.genre);
-      setRating(editingItem.rating);
-      setComment(editingItem.comment || '');
-      setCoverUrl(editingItem.coverUrl || '');
-      setArtist(editingItem.artist || '');
-      setAlbum(editingItem.album || '');
-      setIsFavorite(editingItem.isFavorite);
-    } else {
-      // 신규 등록 시 기본값
-      setTitle('');
-      setYear(new Date().getFullYear());
-      setGenre(availableGenres[0]);
-      setRating(5);
-      setComment('');
-      setCoverUrl('');
-      setArtist('');
-      setAlbum('');
-      setIsFavorite(false);
-    }
-    setPreviewError(false);
-  }, [editingItem, isOpen, type]);
+  const [title, setTitle] = useState(editingItem?.title ?? '');
+  const [year, setYear] = useState<number | string>(editingItem?.year ?? CURRENT_YEAR);
+  const [genre, setGenre] = useState<GenreType>(editingItem?.genre ?? availableGenres[0]);
+  const [rating, setRating] = useState<number>(editingItem?.rating ?? 5);
+  const [comment, setComment] = useState(editingItem?.comment ?? '');
+  const [coverUrl, setCoverUrl] = useState(editingItem?.coverUrl ?? '');
+  const [artist, setArtist] = useState(editingItem?.artist ?? '');
+  const [album, setAlbum] = useState(editingItem?.album ?? '');
+  const [isFavorite] = useState(editingItem?.isFavorite ?? false);
 
-  if (!isOpen) return null;
+  // 이미지 입력 방식 탭 ('file' | 'url')
+  const [imageInputMode, setImageInputMode] = useState<'file' | 'url'>('file');
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,7 +109,10 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
   }[type];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in"
+      onClick={onClose}
+    >
       <div 
         className="relative w-full max-w-lg bg-white rounded-3xl shadow-xl border border-stone-200/80 overflow-hidden my-8"
         onClick={(e) => e.stopPropagation()}
@@ -299,7 +275,7 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
                     <p className="text-xs font-medium text-stone-700">
                       이미지 파일을 드래그하거나 클릭하여 선택
                     </p>
-                    <p className="text-[11px] text-stone-400 mt-0.5">JPG, PNG, WebP (최대 5MB)</p>
+                    <p className="text-[11px] text-stone-400 mt-0.5">JPG, PNG, WebP (최대 10MB)</p>
                   </div>
                 )}
               </div>
@@ -387,4 +363,10 @@ export const ContentFormModal: React.FC<ContentFormModalProps> = ({
       </div>
     </div>
   );
+};
+
+export const ContentFormModal: React.FC<ContentFormModalProps> = ({ isOpen, ...props }) => {
+  if (!isOpen) return null;
+  const modalKey = `${props.type}_${props.editingItem?.id || 'new'}`;
+  return <ContentFormModalInner key={modalKey} {...props} />;
 };

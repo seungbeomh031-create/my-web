@@ -17,7 +17,10 @@ export const FirebaseInfoModal: React.FC<FirebaseInfoModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs overflow-y-auto animate-fade-in"
+      onClick={onClose}
+    >
       <div 
         className="relative w-full max-w-lg bg-white rounded-3xl shadow-xl border border-stone-200/80 overflow-hidden my-8"
         onClick={(e) => e.stopPropagation()}
@@ -71,13 +74,21 @@ export const FirebaseInfoModal: React.FC<FirebaseInfoModalProps> = ({
               ? 'bg-sky-50/80 border-sky-200 text-sky-800'
               : 'bg-stone-50 border-stone-200 text-stone-700'
           }`}>
-            <CheckCircle2 className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+            {isCloudinaryConfigured ? (
+              <CheckCircle2 className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-stone-500 shrink-0 mt-0.5" />
+            )}
             <div>
               <h4 className="font-semibold text-sm">
-                Cloudinary 이미지 저장소 연동됨 (l9wpigxf / my-web)
+                {isCloudinaryConfigured
+                  ? 'Cloudinary 이미지 저장소가 연동되었습니다.'
+                  : 'Cloudinary 미설정 (로컬 이미지 변환 모드)'}
               </h4>
               <p className="mt-1 text-xs opacity-90">
-                콘텐츠 등록 및 수정 시 업로드하는 포스터/앨범 이미지가 Cloudinary CDN에 저장됩니다.
+                {isCloudinaryConfigured
+                  ? '콘텐츠 등록 및 수정 시 업로드하는 포스터/앨범 이미지가 Cloudinary CDN에 안전하게 저장됩니다.'
+                  : '환경 변수(.env)에 Cloudinary 설정이 없어도 브라우저 로컬 이미지 변환 방식으로 정상 동작합니다.'}
               </p>
             </div>
           </div>

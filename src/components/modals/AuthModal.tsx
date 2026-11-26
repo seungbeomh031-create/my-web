@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Mail, Lock, User, AlertCircle, Loader2, BookmarkCheck } from 'lucide-react';
 import { 
   loginWithEmail, 
   registerWithEmail, 
   signInWithGoogle, 
-  getAuthErrorMessage 
+  getAuthErrorMessage,
+  type User as FirebaseUser,
 } from '../../firebase/config';
 
 interface AuthModalProps {
   isOpen: boolean;
   initialMode?: 'login' | 'register';
   onClose: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (user?: FirebaseUser | null) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
+const AuthModalContent: React.FC<Omit<AuthModalProps, 'isOpen'>> = ({
   initialMode = 'login',
   onClose,
   onSuccess,
@@ -28,19 +28,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setMode(initialMode);
-      setErrorMessage(null);
-      setEmail('');
-      setPassword('');
-      setPasswordConfirm('');
-      setDisplayName('');
-    }
-  }, [isOpen, initialMode]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,12 +56,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       setLoading(true);
-      if (mode === 'login') {
-        await loginWithEmail(email.trim(), password);
-      } else {
-        await registerWithEmail(email.trim(), password, displayName.trim());
-      }
-      onSuccess?.();
+      const user =
+        mode === 'login'
+          ? await loginWithEmail(email.trim(), password)
+          : await registerWithEmail(email.trim(), password, displayName.trim());
+      onSuccess?.(user);
       onClose();
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
@@ -92,8 +78,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMessage(null);
     try {
       setGoogleLoading(true);
-      await signInWithGoogle();
-      onSuccess?.();
+      const user = await signInWithGoogle();
+      onSuccess?.(user);
       onClose();
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
@@ -345,4 +331,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       </div>
     </div>
   );
+};
+
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, ...props }) => {
+  if (!isOpen) return null;
+  return <AuthModalContent key={props.initialMode || 'login'} {...props} />;
 };

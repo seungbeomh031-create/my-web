@@ -14,7 +14,8 @@ export const ContentCard: React.FC<ContentCardProps> = ({
   onClick,
   onToggleFavorite,
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const imageError = Boolean(item.coverUrl && failedUrl === item.coverUrl);
 
   const isMovie = item.type === 'movie';
   const badgeColor = isMovie 
@@ -32,7 +33,7 @@ export const ContentCard: React.FC<ContentCardProps> = ({
           <img
             src={item.coverUrl}
             alt={item.title}
-            onError={() => setImageError(true)}
+            onError={() => setFailedUrl(item.coverUrl || null)}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
